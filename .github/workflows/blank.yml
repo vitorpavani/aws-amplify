@@ -1,23 +1,47 @@
-name: List S3 Contents - Multi OS
+name: 'Amplify Deploy'
+on: [push]
 
-on:
-  push
 jobs:
-  deploy:
-    name: Upload to Amazon S3
+  test:
+    name: test amplify-cli-action
     runs-on: ubuntu-latest
 
+    strategy:
+      matrix:
+        node-version: [10.x]
+
     steps:
-    - name: Checkout
-      uses: actions/checkout@v2
+    - uses: actions/checkout@v1
 
-    - name: Configure AWS credentials from Test account
-      uses: aws-actions/configure-aws-credentials@v1
+    - name: use node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v1
       with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: eu-central-1
+        node-version: ${{ matrix.node-version }}
 
-    - name: Copy files to the test website with the AWS CLI
+    - name: configure amplify
+      uses: ambientlight/amplify-cli-action@0.3.0
+      with:
+        amplify_command: status
+        amplify_env: env
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        AWS_REGION: eu-central-1
+
+    - name: install, build and test
       run: |
-        aws amplify status
+        npm install
+        # build and test
+        # npm run build
+        # npm run test
+    
+    - name: deploy
+      uses: ambientlight/amplify-cli-action@0.3.0
+      with:
+        amplify_command: status
+        amplify_env: prod
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        AWS_REGION: eu-central-1
+    
